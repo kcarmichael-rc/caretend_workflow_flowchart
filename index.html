@@ -4,14 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CareTend Workflow Flowchart Viewer</title>
+
+<!-- Google Fonts - Open Sans -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f0f0f0;
-    min-height: 100vh;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
+    font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f0f0;
 }
 
 .container {
@@ -20,6 +29,11 @@ body {
     display: flex;
     flex-direction: column;
     background: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .loading {
@@ -30,6 +44,7 @@ body {
     bottom: 0;
     background: rgba(255, 255, 255, 0.95);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 9999;
@@ -39,6 +54,27 @@ body {
 
 .loading.hidden {
     display: none;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #e9ecef;
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error {
+    color: #dc3545;
+    max-width: 600px;
+    text-align: center;
+    padding: 20px;
 }
 
 .header {
@@ -55,6 +91,7 @@ body {
     font-size: 1.8em;
     margin: 0;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    font-weight: 600;
 }
 
 .controls {
@@ -79,6 +116,7 @@ body {
     font-size: 13px;
     font-weight: 600;
     transition: all 0.2s ease;
+    font-family: 'Open Sans', sans-serif;
 }
 
 .controls button:hover {
@@ -88,6 +126,14 @@ body {
 
 .controls button:active {
     transform: translateY(0);
+}
+
+.fullscreen-btn {
+    background: #dc3545 !important;
+}
+
+.fullscreen-btn:hover {
+    background: #c82333 !important;
 }
 
 .zoom-controls {
@@ -321,6 +367,7 @@ body {
 
 .svg-wrapper svg {
     display: block;
+    font-family: 'Open Sans', sans-serif;
 }
 
 .nav-link {
@@ -365,6 +412,7 @@ body {
     color: #667eea;
     margin-bottom: 10px;
     font-size: 14px;
+    font-weight: 600;
 }
 
 .instructions ul {
@@ -374,7 +422,10 @@ body {
 </style>
 </head>
 <body>
-<div class="loading" id="loading">Loading flowchart...</div>
+<div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div id="loadingText">Loading flowchart...</div>
+</div>
 
 <div class="container">
     <div class="header">
@@ -385,6 +436,7 @@ body {
         <button onclick="toggleKey()">🔑 Toggle Key</button>
         <button onclick="resetView()">🏠 Reset View</button>
         <button onclick="fitToScreen()">📐 Fit to Screen</button>
+        <button onclick="openFullscreen()" class="fullscreen-btn">⛶ Open Fullscreen</button>
         <button onclick="toggleInstructions()">❓ Help</button>
         
         <div class="bookmarks">
@@ -456,6 +508,7 @@ body {
             <li><strong>SOP Links:</strong> Click to open in new tab</li>
             <li><strong>Reset:</strong> Click 🏠 to return to start</li>
             <li><strong>Fit:</strong> Click 📐 to see entire flowchart</li>
+            <li><strong>Fullscreen:</strong> Click ⛶ to open in new window</li>
         </ul>
     </div>
 </div>
@@ -477,34 +530,65 @@ let keyDragging = false;
 let keyStartX, keyStartY;
 let keyLastX = 0, keyLastY = 0;
 
-// All bookmark locations (including type question for navigation to work)
+// All bookmark locations
 const bookmarkLocations = [{"name": "ePrescription Manager", "id": "anchor_eprescription", "x": 560.68, "y": 42.05}, {"name": "Order Entry / Completion", "id": "anchor_orderentry", "x": 560.68, "y": 572.96}, {"name": "Patients to Contact (New Rxs)", "id": "anchor_newrxs", "x": 561.2, "y": 1209.92}, {"name": "Patients to Contact (Refills)", "id": "anchor_refills", "x": 561.92, "y": 3924.89}, {"name": "Process Rx / Print Labels", "id": "anchor_processrx", "x": 559.23, "y": 6581.81}, {"name": "Print Delivery Tickets", "id": "anchor_printdt", "x": 559.23, "y": 7499}, {"name": "Delivery Ticket Confirmation", "id": "anchor_dtconfirm", "x": 552.51, "y": 8033.98}, {"name": "Patients with Incomplete Information", "id": "anchor_incomplete", "x": 560.68, "y": 9521.35}, {"name": "What is the type?", "id": "anchor_what_is_type", "x": 590.68, "y": 2872.62}];
 
 const sopBoxes = [{"id": "Request_Eligibility_and_Auth_Check", "url": "https://www.sweetprocess.com/procedures/JBpWyH36w9L/request-eligibility-and-auth-check/"}, {"id": "Request_Eligibility_and_Auth_Check-2", "url": "https://www.sweetprocess.com/procedures/JBpWyH36w9L/request-eligibility-and-auth-check/"}, {"id": "Create_Delivery_Ticket_DT_", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"}, {"id": "Create_Delivery_Ticket_DT_-2", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"}, {"id": "QC_Delivery_Ticket_DT_and_Make_Ready_to_Fill", "url": "https://www.sweetprocess.com/procedures/5jp68iEojya/qc-delivery-ticket-dt-and-make-ready-to-fill/"}, {"id": "QC_Delivery_Ticket_DT_and_Make_Ready_to_Fill-2", "url": "https://www.sweetprocess.com/procedures/5jp68iEojya/qc-delivery-ticket-dt-and-make-ready-to-fill/"}];
 
 const navigationMappings = {"Order Entry / Order Completion": "anchor_orderentry", "Order Entry": "anchor_orderentry", "Patients to Contact (New Rxs)": "anchor_newrxs", "Patients to Contact (New Rx)": "anchor_newrxs", "New Rxs": "anchor_newrxs", "Patients to Contact (Refills)": "anchor_refills", "Refills": "anchor_refills", "Process Rx / Print Labels": "anchor_processrx", "Process Rx": "anchor_processrx", "Print Delivery Tickets": "anchor_printdt", "Delivery Ticket Confirmation": "anchor_dtconfirm", "Patients with Incomplete Information": "anchor_incomplete", "Incomplete Information": "anchor_incomplete", "What is the type?": "anchor_what_is_type"};
 
+// Open in fullscreen new window/tab
+function openFullscreen() {
+    const currentUrl = window.location.href;
+    window.open(currentUrl, '_blank', 'width=' + screen.availWidth + ',height=' + screen.availHeight);
+}
+
 // Load SVG files
 async function loadSVGs() {
+    const loadingEl = document.getElementById('loading');
+    const loadingText = document.getElementById('loadingText');
+    
     try {
+        loadingText.textContent = 'Loading flowchart...';
+        
         // Load flowchart SVG
         const flowchartResponse = await fetch('CareTend_Workflow_Flowchart.svg');
+        if (!flowchartResponse.ok) {
+            throw new Error('Flowchart file not found. Make sure "CareTend_Workflow_Flowchart.svg" is uploaded.');
+        }
         const flowchartText = await flowchartResponse.text();
         document.getElementById('svgWrapper').innerHTML = flowchartText;
         
+        loadingText.textContent = 'Loading key...';
+        
         // Load key SVG
         const keyResponse = await fetch('00_key.svg');
+        if (!keyResponse.ok) {
+            throw new Error('Key file not found. Make sure "00_key.svg" is uploaded.');
+        }
         const keyText = await keyResponse.text();
         document.getElementById('keySvgWrapper').innerHTML = keyText;
         
         // Hide loading screen
-        document.getElementById('loading').classList.add('hidden');
+        loadingEl.classList.add('hidden');
         
         // Initialize after SVGs are loaded
         init();
     } catch (error) {
         console.error('Error loading SVG files:', error);
-        document.getElementById('loading').textContent = 'Error loading flowchart. Please refresh the page.';
+        loadingEl.innerHTML = `
+            <div class="loading-spinner" style="display:none"></div>
+            <div class="error">
+                <h3>❌ Error Loading Files</h3>
+                <p>${error.message}</p>
+                <p style="margin-top: 15px;">Please make sure all three files are uploaded to GitHub:</p>
+                <ul style="text-align: left; display: inline-block; margin-top: 10px;">
+                    <li>index.html</li>
+                    <li>CareTend_Workflow_Flowchart.svg</li>
+                    <li>00_key.svg</li>
+                </ul>
+            </div>
+        `;
     }
 }
 
@@ -579,9 +663,6 @@ function makeSOPLinksClickable() {
             });
             
             sopCount++;
-            console.log(`Made SOP box clickable: ${sopBox.id}`);
-        } else {
-            console.warn(`SOP box not found: ${sopBox.id}`);
         }
     });
     
@@ -613,11 +694,9 @@ function makeNavigationLinksClickable() {
                     newElem.addEventListener('click', (e) => {
                         e.stopPropagation();
                         jumpToQueue(anchorId);
-                        console.log('Navigation to:', queueText, '→', anchorId);
                     }, false);
                     
                     navCount++;
-                    console.log(`Made navigation clickable: "${textContent.substring(0, 50)}..." → ${anchorId}`);
                     break;
                 }
             }
@@ -817,20 +896,14 @@ function jumpToQueue(queueId) {
         return;
     }
     
-    const container = document.getElementById('viewerContainer');
-    
     currentZoom = 1.5;
-    
     currentX = 100 - bookmark.x * currentZoom;
     currentY = 80 - bookmark.y * currentZoom;
-    
     lastX = currentX;
     lastY = currentY;
     
     enableTransition();
     updateTransform();
-    
-    console.log(`Jumped to ${bookmark.name} at (${bookmark.x}, ${bookmark.y}) with ${currentZoom}x zoom`);
 }
 
 function toggleKey() {
