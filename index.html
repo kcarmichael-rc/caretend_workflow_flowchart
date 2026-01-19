@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareTend Workflow Flowchart Viewer</title>
+
+<!-- Google Fonts - Open Sans -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f0f0;
+}
+
+/* Password Modal Styles */
+.password-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.password-overlay.hidden {
+    display: none;
+}
+
+.password-modal {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+.password-modal h2 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.password-modal p {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 14px;
+}
+
+.password-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: 'Open Sans', sans-serif;
+    margin-bottom: 20px;
+    transition: border-color 0.3s;
+}
+
+.password-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.password-submit {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.password-submit:hover {
+    transform: translateY(-2px);
+}
+
+.password-submit:active {
+    transform: translateY(0);
+}
+
+.password-error {
+    color: #dc3545;
+    margin-top: 15px;
+    font-size: 14px;
+    display: none;
+}
+
+.password-error.show {
+    display: block;
+}
+
+.container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    font-size: 18px;
+    color: #667eea;
+}
+
+.loading.hidden {
+    display: none;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #e9ecef;
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error {
+    color: #dc3545;
+    max-width: 600px;
+    text-align: center;
+    padding: 20px;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 30px;
+    text-align: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+.header h1 {
+    font-size: 1.8em;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    font-weight: 600;
+}
+
+.controls {
+    padding: 12px 30px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+.controls button {
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.controls button:hover {
+    background: #764ba2;
+    transform: translateY(-1px);
+}
+
+.controls button:active {
+    transform: translateY(0);
+}
+
+.fullscreen-btn {
+    background: #dc3545 !important;
+}
+
+.fullscreen-btn:hover {
+    background: #c82333 !important;
+}
+
+.zoom-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+}
+
+.zoom-level {
+    font-weight: 600;
+    color: #495057;
+    min-width: 60px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.bookmarks {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border-left: 2px solid #dee2e6;
+    padding-left: 15px;
+    margin-left: 15px;
+}
+
+.queue-dropdown {
+    padding: 7px 12px;
+    border: 2px solid #28a745;
+    border-radius: 6px;
+    background: white;
+    color: #495057;
+    font-size: 13px;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 250px;
+    transition: all 0.2s ease;
+}
+
+.queue-dropdown:hover {
+    border-color: #218838;
+    background: #f8f9fa;
+}
+
+.queue-dropdown:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+.key-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 520px;
+    background: white;
+    border-right: 2px solid #e9ecef;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+.key-panel.collapsed {
+    transform: translateX(-520px);
+}
+
+.key-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 16px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.key-title {
+    transition: opacity 0.3s ease;
+}
+
+.key-panel.collapsed .key-title {
+    opacity: 0;
+}
+
+.key-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.key-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+
+.key-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.key-main-area {
+    width: 320px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.key-viewer {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.key-tooltip-area {
+    width: 200px;
+    background: #f8f9fa;
+    border-left: 2px solid #e9ecef;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    display: none; /* Hidden - tooltips are in SVG */
+}
+
+
+.key-panel.collapsed .key-content {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.key-viewer {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.key-viewer.grabbing {
+    cursor: grabbing;
+}
+
+.key-svg-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(2.2);
+    transition: none;
+}
+
+.key-svg-wrapper svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.key-zoom-controls {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    z-index: 10;
+}
+
+.key-zoom-controls button {
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.key-zoom-controls button:hover {
+    background: rgba(118, 75, 162, 0.9);
+}
+
+.key-toggle-tab {
+    position: absolute;
+    left: 520px;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 49;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.key-panel.collapsed + .key-toggle-tab {
+    opacity: 1;
+    pointer-events: all;
+    left: 0;
+}
+
+.key-toggle-tab:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.key-toggle-tab-icon {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.flowchart-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: white;
+    /* Shift handled by viewer-container margin */
+}
+
+.viewer-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: white;
+    cursor: grab;
+    /* No additional margin needed - key panel creates space */
+}
+
+.viewer-container.grabbing {
+    cursor: grabbing;
+}
+
+.svg-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    transition: transform 0.3s ease;
+}
+
+.svg-wrapper.no-transition {
+    transition: none;
+}
+
+.svg-wrapper svg {
+    display: block;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.nav-link {
+    cursor: pointer;
+}
+
+.nav-link:hover {
+    opacity: 0.8;
+}
+
+.legend {
+    padding: 12px 30px;
+    background: #f8f9fa;
+    border-top: 2px solid #e9ecef;
+    font-size: 13px;
+    flex-shrink: 0;
+    text-align: center;
+    color: #666;
+    z-index: 100;
+}
+
+.instructions {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    font-size: 13px;
+    max-width: 300px;
+    display: none;
+    z-index: 1000;
+}
+
+.instructions.show {
+    display: block;
+}
+
+.instructions h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.instructions ul {
+    margin-left: 20px;
+    line-height: 1.8;
+}
+
+.search-controls {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    border-right: 2px solid #dee2e6;
+    padding-right: 15px;
+    margin-right: 15px;
+}
+
+.search-input {
+    padding: 6px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'Open Sans', sans-serif;
+    width: 200px;
+    transition: border-color 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.search-controls button {
+    padding: 6px 10px;
+    min-width: 32px;
+}
+
+.search-controls button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.search-results {
+    font-size: 12px;
+    color: #495057;
+    font-weight: 600;
+    min-width: 80px;
+}
+
+/* Only highlight the current result - no visual change, handled by rect */
+.search-highlight-current {
+    /* Highlight handled by dynamically created rectangle */
+}
+
+
+/* Update notification banner */
+.update-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: #000;
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 10001;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.update-banner.show {
+    display: flex;
+}
+
+.update-banner-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.update-banner-icon {
+    font-size: 18px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.update-refresh-btn {
+    background: white;
+    color: #ff9800;
+    border: 2px solid white;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.update-refresh-btn:hover {
+    background: #f5f5f5;
+    transform: translateY(-1px);
+}
+
+.update-dismiss-btn {
+    background: transparent;
+    color: #000;
+    border: 2px solid rgba(0,0,0,0.3);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.update-dismiss-btn:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+
+/* Hide all role name tooltips by default */
+#biller_names,
+#biller_ncpdp_names,
+#pcc_names,
+#insrel_names,
+#purchaser_names,
+#pharmclerk_names,
+#pharmtech_names,
+#pharmacist_names,
+#qcer_names,
+#insivdf_names,
+#inselig_names,
+#inspa_names {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+</style>
+</head>
+<body>
+
+<!-- Password Protection Overlay -->
+<div class="password-overlay" id="passwordOverlay">
+    <div class="password-modal">
+        <h2>🔒 Secure Access</h2>
+        <p>Please enter the password to view the flowchart</p>
+        <form id="passwordForm" onsubmit="checkPassword(event)">
+            <input 
+                type="password" 
+                id="passwordInput" 
+                class="password-input" 
+                placeholder="Enter password"
+                autocomplete="off"
+                autofocus
+            >
+            <button type="submit" class="password-submit">Access Flowchart</button>
+        </form>
+        <div class="password-error" id="passwordError">
+            ❌ Incorrect password. Please try again.
+        </div>
+    </div>
+</div>
+
+<!-- Update notification banner -->
+<div class="update-banner" id="updateBanner">
+    <div class="update-banner-text">
+        <span class="update-banner-icon">🔄</span>
+        <span>A new version of the flowchart is available!</span>
+    </div>
+    <button onclick="refreshPage()" class="update-refresh-btn">Refresh Now</button>
+    <button onclick="dismissUpdateBanner()" class="update-dismiss-btn">Later</button>
+</div>
+
+
+<div class="loading hidden" id="loading">
+    <div class="loading-spinner"></div>
+    <div id="loadingText">Loading flowchart...</div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>🔄 CareTend Workflow Flowchart</h1>
+    </div>
+    
+    <div class="controls">
+        <button onclick="toggleKey()">🔑 Toggle Key</button>
+        <button onclick="resetView()">🏠 Reset View</button>
+        <button onclick="fitToScreen()">📐 Fit to Screen</button>
+        <button onclick="openFullscreen()" class="fullscreen-btn">⛶ Open Fullscreen</button>
+        <button onclick="toggleInstructions()">❓ Help</button>
+        
+        <div class="search-controls">
+            <input 
+                type="text" 
+                id="searchInput" 
+                class="search-input" 
+                placeholder="Search flowchart..."
+                onkeypress="if(event.key==='Enter') searchFlowchart()"
+            >
+            <button onclick="searchFlowchart()" title="Search">🔍</button>
+            <button onclick="previousResult()" id="prevBtn" disabled title="Previous result">←</button>
+            <button onclick="nextResult()" id="nextBtn" disabled title="Next result">→</button>
+            <button onclick="clearSearch()" id="clearBtn" disabled title="Clear search">✕</button>
+            <span class="search-results" id="searchResults"></span>
+        </div>
+        
+        <div class="bookmarks">
+            <label for="queueSelect" style="font-weight: 600; color: #495057; font-size: 13px; margin-right: 5px;">Jump to Queue:</label>
+            <select id="queueSelect" class="queue-dropdown" onchange="jumpToSelectedQueue()">
+                <option value="">-- Select Queue --</option>
+                <option value="anchor_eprescription">ePrescription Manager</option>
+                <option value="anchor_orderentry">Order Entry / Completion</option>
+                <option value="anchor_newrxs">Patients to Contact (New Rxs)</option>
+                <option value="anchor_refills">Patients to Contact (Refills)</option>
+                <option value="anchor_processrx">Process Rx / Print Labels</option>
+                <option value="anchor_printdt">Print Delivery Tickets</option>
+                <option value="anchor_dtconfirm">Delivery Ticket Confirmation</option>
+                <option value="anchor_incomplete">Patients with Incomplete Information</option>
+                <option value="anchor_pharmacy_claim">Pharmacy Claim Manager</option>
+            </select>
+        </div>
+        
+        <div class="zoom-controls">
+            <button onclick="zoomIn()">🔍+</button>
+            <button onclick="zoomOut()">🔍−</button>
+            <span class="zoom-level" id="zoomLevel">150%</span>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="flowchart-panel">
+            <div class="viewer-container" id="viewerContainer">
+                <div class="svg-wrapper" id="svgWrapper">
+                    <!-- Flowchart SVG will be loaded here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="key-panel" id="keyPanel">
+            <div class="key-header">
+                <span class="key-title">🔑 Key</span>
+                <button class="key-toggle" onclick="toggleKey()">
+                    <span id="keyToggleIcon">◀</span>
+                </button>
+            </div>
+            <div class="key-content">
+                <div class="key-main-area">
+                    <div class="key-viewer" id="keyViewer">
+                        <div class="key-svg-wrapper" id="keySvgWrapper">
+                            <!-- Key SVG will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="key-zoom-controls">
+                        <button onclick="keyZoomIn()" title="Zoom in">+</button>
+                        <button onclick="keyZoomOut()" title="Zoom out">−</button>
+                        <button onclick="keyResetZoom()" title="Reset">↺</button>
+                    </div>
+                </div>
+                <div class="key-tooltip-area" id="keyTooltipArea">
+                    <!-- Role description will appear here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="key-toggle-tab" onclick="toggleKey()">
+            <span class="key-toggle-tab-icon">▶</span>
+        </div>
+    </div>
+    
+    <div class="legend">
+        🖱️ Click and drag to pan | 🔍 Scroll to zoom | 📍 Use bookmark buttons to jump to workflow queues | 🔗 Click blue SOP links to open procedures | ⬛ Click black navigation boxes to jump between queues | 👆 Hover over Job Roles in Key to see team members
+    </div>
+    
+    <div class="instructions" id="instructions">
+        <h3>How to Use</h3>
+        <ul>
+            <li><strong>Pan:</strong> Click and drag anywhere</li>
+            <li><strong>Zoom:</strong> Scroll wheel or +/− buttons</li>
+            <li><strong>Navigate:</strong> Click green bookmark buttons</li>
+            <li><strong>Jump in Flow:</strong> Click black "Proceed to" boxes</li>
+            <li><strong>Key:</strong> Toggle with 🔑 button or K key</li>
+            <li><strong>Key Pan/Zoom:</strong> Drag and use +/− buttons in key</li>
+            <li><strong>Hover over Job Roles:</strong> In the Key to see who's in that role</li>
+            <li><strong>SOP Links:</strong> Click to open in new tab</li>
+            <li><strong>Reset:</strong> Click 🏠 to return to start</li>
+            <li><strong>Fit:</strong> Click 📐 to see entire flowchart</li>
+            <li><strong>Fullscreen:</strong> Click ⛶ to open in new window</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+// Password protection - CHANGE THIS PASSWORD!
+const CORRECT_PASSWORD = "redchip26";  // ← CHANGE THIS TO YOUR PASSWORD
+
+// Check if already authenticated in this session
+let isAuthenticated = sessionStorage.getItem('flowchart_authenticated') === 'true';
+
+if (isAuthenticated) {
+    document.getElementById('passwordOverlay').classList.add('hidden');
+    loadSVGs();
+}
+
+function checkPassword(event) {
+    event.preventDefault();
+    const input = document.getElementById('passwordInput');
+    const error = document.getElementById('passwordError');
+    
+    if (input.value === CORRECT_PASSWORD) {
+        // Correct password
+        sessionStorage.setItem('flowchart_authenticated', 'true');
+        document.getElementById('passwordOverlay').classList.add('hidden');
+        loadSVGs();
+    } else {
+        // Wrong password
+        error.classList.add('show');
+        input.value = '';
+        input.focus();
+        
+        // Shake animation
+        const modal = document.querySelector('.password-modal');
+        modal.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+            modal.style.animation = '';
+        }, 500);
+    }
+}
+
+// Add shake animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+`;
+document.head.appendChild(style);
+
+// Flowchart viewer state
+let currentZoom = 1.5;
+let currentX = 0;
+let currentY = 0;
+let isDragging = false;
+let startX, startY;
+let lastX = 0, lastY = 0;
+
+// Key viewer state - starts at 138% zoom
+let keyZoom = 2.2;
+let keyX = 0;
+let keyY = 0;
+let keyDragging = false;
+let keyStartX, keyStartY;
+let keyLastX = 0, keyLastY = 0;
+
+// All bookmark locations
+const bookmarkLocations = [{"name": "ePrescription Manager", "id": "anchor_eprescription", "x": 560.68, "y": 42.05}, {"name": "Order Entry / Completion", "id": "anchor_orderentry", "x": 560.68, "y": 572.96}, {"name": "Patients to Contact (New Rxs)", "id": "anchor_newrxs", "x": 561.2, "y": 1209.92}, {"name": "Patients to Contact (Refills)", "id": "anchor_refills", "x": 561.92, "y": 4172.04}, {"name": "Process Rx / Print Labels", "id": "anchor_processrx", "x": 559.23, "y": 7140.39}, {"name": "Print Delivery Tickets", "id": "anchor_printdt", "x": 559.23, "y": 7991.65}, {"name": "Delivery Ticket Confirmation", "id": "anchor_dtconfirm", "x": 559.23, "y": 9357.32}, {"name": "Patients with Incomplete Information", "id": "anchor_incomplete", "x": 560.68, "y": 9960.26}, {"name": "Pharmacy Claim Manager", "id": "anchor_pharmacy_claim", "x": 560.68, "y": 10997.08}, {"name": "What is the type?", "id": "anchor_what_is_type", "x": 590.68, "y": 2872.62}];
+
+const sopBoxes = [
+    {"id": "CIBD", "url": "https://www.sweetprocess.com/procedures/OW545cM3Dvj/send-cibd-order-form-and-process-returned-po/"},
+    {"id": "CHLA", "url": "https://www.sweetprocess.com/procedures/46vDAfwzW5K/send-and-document-chla-advancement/"},
+    {"id": "Create_Delivery_Ticket_DT_", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"},
+    {"id": "Create_Delivery_Ticket_DT_-2", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"},
+    {"id": "Create_Delivery_Ticket_DT_-3", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"},
+    {"id": "Create_Delivery_Ticket_DT_-4", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"},
+    {"id": "Request_Eligibility_and_Auth_Check", "url": "https://www.sweetprocess.com/procedures/JBpWyH36w9L/request-eligibility-and-auth-check/"},
+    {"id": "Request_Eligibility_and_Auth_Check-2", "url": "https://www.sweetprocess.com/procedures/JBpWyH36w9L/request-eligibility-and-auth-check/"},
+    {"id": "QC_Delivery_Ticket_DT_and_Make_Ready_to_Fill", "url": "https://www.sweetprocess.com/procedures/5jp68iEojya/qc-delivery-ticket-dt-and-make-ready-to-fill/"},
+    {"id": "QC_Delivery_Ticket_DT_and_Make_Ready_to_Fill-2", "url": "https://www.sweetprocess.com/procedures/5jp68iEojya/qc-delivery-ticket-dt-and-make-ready-to-fill/"}
+];
+
+const navigationMappings = {"Order Entry / Order Completion": "anchor_orderentry", "Order Entry": "anchor_orderentry", "Patients to Contact (New Rxs)": "anchor_newrxs", "Patients to Contact (New Rx)": "anchor_newrxs", "New Rxs": "anchor_newrxs", "Patients to Contact (Refills)": "anchor_refills", "Refills": "anchor_refills", "Process Rx / Print Labels": "anchor_processrx", "Process Rx": "anchor_processrx", "Print Delivery Tickets": "anchor_printdt", "Delivery Ticket Confirmation": "anchor_dtconfirm", "Patients with Incomplete Information": "anchor_incomplete", "Incomplete Information": "anchor_incomplete", "What is the type?": "anchor_what_is_type"};
+
+// Open in fullscreen new window/tab
+function openFullscreen() {
+    const currentUrl = window.location.href;
+    window.open(currentUrl, '_blank', 'width=' + screen.availWidth + ',height=' + screen.availHeight);
+}
+
+// Load SVG files
+async function loadSVGs() {
+    const loadingEl = document.getElementById('loading');
+    const loadingText = document.getElementById('loadingText');
+    loadingEl.classList.remove('hidden');
+    
+    try {
+        loadingText.textContent = 'Loading flowchart...';
+        
+        // Load flowchart SVG
+        const flowchartResponse = await fetch('CareTend_Workflow_Flowchart.svg');
+        if (!flowchartResponse.ok) {
+            throw new Error('Flowchart file not found. Make sure "CareTend_Workflow_Flowchart.svg" is uploaded.');
+        }
+        const flowchartText = await flowchartResponse.text();
+        document.getElementById('svgWrapper').innerHTML = flowchartText;
+        
+        loadingText.textContent = 'Loading key...';
+        
+        // Load key SVG
+        const keyResponse = await fetch('00_key.svg');
+        if (!keyResponse.ok) {
+            throw new Error('Key file not found. Make sure "00_key.svg" is uploaded.');
+        }
+        const keyText = await keyResponse.text();
+        document.getElementById('keySvgWrapper').innerHTML = keyText;
+        
+        // Hide loading screen
+        loadingEl.classList.add('hidden');
+        
+        // Initialize after SVGs are loaded
+        init();
+    } catch (error) {
+        console.error('Error loading SVG files:', error);
+        loadingEl.innerHTML = `
+            <div class="loading-spinner" style="display:none"></div>
+            <div class="error">
+                <h3>❌ Error Loading Files</h3>
+                <p>${error.message}</p>
+                <p style="margin-top: 15px;">Please make sure all three files are uploaded to GitHub:</p>
+                <ul style="text-align: left; display: inline-block; margin-top: 10px;">
+                    <li>index.html</li>
+                    <li>CareTend_Workflow_Flowchart.svg</li>
+                    <li>00_key.svg</li>
+                </ul>
+            </div>
+        `;
+    }
+}
+
+function init() {
+    const svg = document.querySelector('#svgWrapper > svg');
+    if (!svg) {
+        console.error('SVG not found');
+        return;
+    }
+    
+    const viewBox = svg.viewBox.baseVal;
+    
+    if (!svg.hasAttribute('width')) {
+        svg.setAttribute('width', viewBox.width);
+    }
+    if (!svg.hasAttribute('height')) {
+        svg.setAttribute('height', viewBox.height);
+    }
+    
+    const container = document.getElementById('viewerContainer');
+    
+    container.addEventListener('mousedown', startDrag);
+    container.addEventListener('mousemove', drag);
+    container.addEventListener('mouseup', endDrag);
+    container.addEventListener('mouseleave', endDrag);
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', endDrag);
+    
+    // Key viewer events
+    const keyViewer = document.getElementById('keyViewer');
+    keyViewer.addEventListener('mousedown', startKeyDrag);
+    keyViewer.addEventListener('mousemove', dragKey);
+    keyViewer.addEventListener('mouseup', endKeyDrag);
+    keyViewer.addEventListener('mouseleave', endKeyDrag);
+    keyViewer.addEventListener('wheel', handleKeyWheel, { passive: false });
+    
+    makeSOPLinksClickable();
+    makeNavigationLinksClickable();
+    
+    setTimeout(() => jumpToQueue('anchor_eprescription'), 100);
+}
+
+// Make all 6 SOP boxes clickable
+function makeSOPLinksClickable() {
+    const svg = document.querySelector('#svgWrapper > svg');
+    if (!svg) return;
+    
+    let sopCount = 0;
+    
+    sopBoxes.forEach(sopBox => {
+        const elem = svg.getElementById(sopBox.id);
+        
+        if (elem) {
+            elem.style.cursor = 'pointer';
+            elem.style.pointerEvents = 'all';
+            
+            elem.addEventListener('mouseenter', () => {
+                elem.style.fillOpacity = '0.1';
+                elem.style.fill = 'blue';
+            });
+            
+            elem.addEventListener('mouseleave', () => {
+                elem.style.fillOpacity = '0';
+            });
+            
+            elem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.open(sopBox.url, '_blank');
+            });
+            
+            sopCount++;
+        }
+    });
+    
+    console.log(`Total SOP links created: ${sopCount}`);
+}
+
+// Make navigation parallelograms clickable
+function makeNavigationLinksClickable() {
+    const svg = document.querySelector('#svgWrapper > svg');
+    if (!svg) return;
+    
+    const allElements = svg.querySelectorAll('*');
+    let navCount = 0;
+    
+    allElements.forEach(elem => {
+        const textContent = elem.textContent || '';
+        
+        if ((textContent.includes('Proceed to') || textContent.includes('Switch to')) && 
+            textContent.length < 150) {
+            
+            for (const [queueText, anchorId] of Object.entries(navigationMappings)) {
+                if (textContent.includes(queueText)) {
+                    elem.style.cursor = 'pointer';
+                    elem.classList.add('nav-link');
+                    
+                    const newElem = elem.cloneNode(true);
+                    elem.parentNode.replaceChild(newElem, elem);
+                    
+                    newElem.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        jumpToQueue(anchorId);
+                    }, false);
+                    
+                    navCount++;
+                    break;
+                }
+            }
+        }
+    });
+    
+    console.log(`Total navigation links created: ${navCount}`);
+}
+
+// Key viewer functions
+function startKeyDrag(e) {
+    keyDragging = true;
+    keyStartX = e.clientX - keyLastX;
+    keyStartY = e.clientY - keyLastY;
+    document.getElementById('keyViewer').classList.add('grabbing');
+    e.stopPropagation();
+}
+
+function dragKey(e) {
+    if (!keyDragging) return;
+    e.preventDefault();
+    keyLastX = e.clientX - keyStartX;
+    keyLastY = e.clientY - keyStartY;
+    keyX = keyLastX;
+    keyY = keyLastY;
+    updateKeyTransform();
+}
+
+function endKeyDrag() {
+    keyDragging = false;
+    document.getElementById('keyViewer').classList.remove('grabbing');
+}
+
+function handleKeyWheel(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    keyZoom = Math.max(0.5, Math.min(3, keyZoom * delta));
+    updateKeyTransform();
+}
+
+function keyZoomIn() {
+    keyZoom = Math.min(keyZoom * 1.2, 3);
+    updateKeyTransform();
+}
+
+function keyZoomOut() {
+    keyZoom = Math.max(keyZoom * 0.8, 0.5);
+    updateKeyTransform();
+}
+
+function keyResetZoom() {
+    keyZoom = 2.2;
+    keyX = 0;
+    keyY = 0;
+    keyLastX = 0;
+    keyLastY = 0;
+    updateKeyTransform();
+}
+
+function updateKeyTransform() {
+    const wrapper = document.getElementById('keySvgWrapper');
+    wrapper.style.transform = `translate(calc(-50% + ${keyX}px), calc(-50% + ${keyY}px)) scale(${keyZoom})`;
+}
+
+function startDrag(e) {
+    if (e.target.classList.contains('nav-link') || 
+        e.target.closest('.nav-link')) return;
+    isDragging = true;
+    startX = e.clientX - lastX;
+    startY = e.clientY - lastY;
+    document.getElementById('viewerContainer').classList.add('grabbing');
+    disableTransition();
+}
+
+function drag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    lastX = e.clientX - startX;
+    lastY = e.clientY - startY;
+    currentX = lastX;
+    currentY = lastY;
+    updateTransform();
+}
+
+function endDrag() {
+    isDragging = false;
+    document.getElementById('viewerContainer').classList.remove('grabbing');
+}
+
+function handleTouchStart(e) {
+    if (e.touches.length === 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        startX = touch.clientX - lastX;
+        startY = touch.clientY - lastY;
+        isDragging = true;
+    }
+}
+
+function handleTouchMove(e) {
+    if (e.touches.length === 1 && isDragging) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        lastX = touch.clientX - startX;
+        lastY = touch.clientY - startY;
+        currentX = lastX;
+        currentY = lastY;
+        updateTransform();
+    }
+}
+
+function handleWheel(e) {
+    e.preventDefault();
+    
+    const container = document.getElementById('viewerContainer');
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const oldZoom = currentZoom;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    currentZoom = Math.max(0.1, Math.min(10, currentZoom * delta));
+    
+    const zoomRatio = currentZoom / oldZoom;
+    currentX = mouseX - (mouseX - currentX) * zoomRatio;
+    currentY = mouseY - (mouseY - currentY) * zoomRatio;
+    lastX = currentX;
+    lastY = currentY;
+    
+    disableTransition();
+    updateTransform();
+}
+
+function zoomIn() {
+    currentZoom = Math.min(currentZoom * 1.3, 10);
+    enableTransition();
+    updateTransform();
+}
+
+function zoomOut() {
+    currentZoom = Math.max(currentZoom * 0.7, 0.1);
+    enableTransition();
+    updateTransform();
+}
+
+function updateTransform() {
+    const wrapper = document.getElementById('svgWrapper');
+    wrapper.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentZoom})`;
+    document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+}
+
+function enableTransition() {
+    const wrapper = document.getElementById('svgWrapper');
+    wrapper.classList.remove('no-transition');
+}
+
+function disableTransition() {
+    const wrapper = document.getElementById('svgWrapper');
+    wrapper.classList.add('no-transition');
+}
+
+function resetView() {
+    jumpToQueue('anchor_eprescription');
+}
+
+function fitToScreen() {
+    const container = document.getElementById('viewerContainer');
+    const svg = document.querySelector('#svgWrapper > svg');
+    
+    if (!svg) return;
+    
+    const viewBox = svg.viewBox.baseVal;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    currentZoom = Math.min(
+        containerWidth / viewBox.width,
+        containerHeight / viewBox.height
+    ) * 0.95;
+    
+    currentX = (containerWidth - viewBox.width * currentZoom) / 2;
+    currentY = 50;
+    lastX = currentX;
+    lastY = currentY;
+    
+    enableTransition();
+    updateTransform();
+}
+
+function jumpToQueue(queueId) {
+    const bookmark = bookmarkLocations.find(b => b.id === queueId);
+    
+    if (!bookmark) {
+        console.error('Bookmark not found:', queueId);
+        return;
+    }
+    
+    currentZoom = 1.5;
+    currentX = 300 - bookmark.x * currentZoom;
+    currentY = 80 - bookmark.y * currentZoom;
+    lastX = currentX;
+    lastY = currentY;
+    
+    enableTransition();
+    updateTransform();
+}
+
+function toggleKey() {
+    const panel = document.getElementById('keyPanel');
+    const icon = document.getElementById('keyToggleIcon');
+    panel.classList.toggle('collapsed');
+    icon.textContent = panel.classList.contains('collapsed') ? '▶' : '◀';
+}
+
+function toggleInstructions() {
+    const instructions = document.getElementById('instructions');
+    instructions.classList.toggle('show');
+}
+
+
+// Search functionality
+let searchResults = [];
+let currentSearchIndex = -1;
+let highlightedElements = [];
+
+function searchFlowchart() {
+    const searchTerm = document.getElementById('searchInput').value.trim();
+    
+    if (!searchTerm) {
+        alert('Please enter a search term');
+        return;
+    }
+    
+    clearSearch();
+    
+    const svg = document.querySelector('#svgWrapper > svg');
+    if (!svg) return;
+    
+    // Find all text elements
+    const allTextElements = svg.querySelectorAll('text');
+    const matches = [];
+    
+    allTextElements.forEach(elem => {
+        const text = elem.textContent || '';
+        if (text.toLowerCase().includes(searchTerm.toLowerCase())) {
+            matches.push({
+                element: elem,
+                highlightElement: elem,  // Highlight the text itself
+                text: text.trim()
+            });
+        }
+    });
+    
+    searchResults = matches;
+    
+    if (matches.length === 0) {
+        document.getElementById('searchResults').textContent = 'No results found';
+        return;
+    }
+    
+    console.log(`Found ${matches.length} matches for "${searchTerm}":`);
+    matches.forEach((m, i) => {
+        console.log(`  ${i + 1}. "${m.text.substring(0, 50)}..."`);
+    });
+    
+    // Store original styles for all matches (but don't highlight them yet)
+    matches.forEach((match) => {
+        const originalFill = match.element.getAttribute('fill') || '';
+        const originalStroke = match.element.getAttribute('stroke') || '';
+        const originalStrokeWidth = match.element.getAttribute('stroke-width') || '';
+        
+        match.element.setAttribute('data-original-fill', originalFill);
+        match.element.setAttribute('data-original-stroke', originalStroke);
+        match.element.setAttribute('data-original-stroke-width', originalStrokeWidth);
+    });
+    
+    // Jump to first result (this will highlight it)
+    currentSearchIndex = 0;
+    showCurrentResult();
+    
+    // Update UI
+    updateSearchUI();
+}
+
+function showCurrentResult() {
+    if (searchResults.length === 0 || currentSearchIndex < 0) return;
+    
+    // Remove previous highlight rectangle if it exists
+    const oldHighlight = document.getElementById('search-highlight-rect');
+    if (oldHighlight) {
+        oldHighlight.remove();
+    }
+    
+    // Remove class from previous result
+    searchResults.forEach((result) => {
+        result.element.classList.remove('search-highlight-current');
+    });
+    
+    // Add class to current result
+    const current = searchResults[currentSearchIndex];
+    current.highlightElement.classList.add('search-highlight-current');
+    
+    // Create a yellow rectangle behind the text
+    try {
+        const textElement = current.element;
+        const svg = document.querySelector('#svgWrapper > svg');
+        
+        // Get the bounding box
+        const bbox = textElement.getBBox();
+        
+        // Get the transform of the text element
+        const transform = textElement.getAttribute('transform') || '';
+        
+        // Create a yellow rectangle
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('id', 'search-highlight-rect');
+        rect.setAttribute('x', bbox.x - 2);
+        rect.setAttribute('y', bbox.y - 2);
+        rect.setAttribute('width', bbox.width + 4);
+        rect.setAttribute('height', bbox.height + 4);
+        rect.setAttribute('fill', '#ffff00');
+        rect.setAttribute('opacity', '0.9');
+        rect.setAttribute('rx', '2');
+        rect.setAttribute('ry', '2');
+        
+        // Apply the same transform as the text element
+        if (transform) {
+            rect.setAttribute('transform', transform);
+        }
+        
+        // Insert the rectangle into the same parent as the text, right before it
+        textElement.parentNode.insertBefore(rect, textElement);
+        
+        console.log(`Created highlight rect: x=${bbox.x.toFixed(1)}, y=${bbox.y.toFixed(1)}, w=${bbox.width.toFixed(1)}, h=${bbox.height.toFixed(1)}`);
+        console.log(`Applied transform: ${transform}`);
+    } catch (e) {
+        console.error('Error creating highlight rect:', e);
+    }
+    
+    // Get position and jump to it
+    try {
+        const textElement = current.element;
+        const svg = document.querySelector('#svgWrapper > svg');
+        const container = document.getElementById('viewerContainer');
+        
+        // First, reset zoom to standard view
+        currentZoom = 1.5;
+        
+        // Get the element's current screen position BEFORE we move
+        const initialRect = textElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        
+        console.log(`Result ${currentSearchIndex + 1}/${searchResults.length}: "${current.text.substring(0, 40)}"`);
+        console.log(`  Element screen position: (${initialRect.left.toFixed(1)}, ${initialRect.top.toFixed(1)})`);
+        console.log(`  Container position: (${containerRect.left.toFixed(1)}, ${containerRect.top.toFixed(1)})`);
+        
+        // Calculate how much we need to move to center this element
+        // Element position relative to container
+        const elementRelativeX = initialRect.left - containerRect.left;
+        const elementRelativeY = initialRect.top - containerRect.top;
+        
+        // Where we want it (center of container)
+        const targetRelativeX = containerRect.width / 2;
+        const targetRelativeY = containerRect.height / 2;
+        
+        // How much to adjust our current translation
+        const adjustX = targetRelativeX - elementRelativeX;
+        const adjustY = targetRelativeY - elementRelativeY;
+        
+        console.log(`  Need to move: (${adjustX.toFixed(1)}, ${adjustY.toFixed(1)})`);
+        
+        // Apply the adjustment
+        currentX = currentX + adjustX;
+        currentY = currentY + adjustY;
+        lastX = currentX;
+        lastY = currentY;
+        
+        console.log(`  New translation: (${currentX.toFixed(1)}, ${currentY.toFixed(1)}) at ${currentZoom}x`);
+        
+        enableTransition();
+        updateTransform();
+    } catch (e) {
+        console.error('Error jumping to result:', e);
+    }
+}
+
+function nextResult() {
+    if (searchResults.length === 0) return;
+    
+    currentSearchIndex = (currentSearchIndex + 1) % searchResults.length;
+    showCurrentResult();
+    updateSearchUI();
+}
+
+function previousResult() {
+    if (searchResults.length === 0) return;
+    
+    currentSearchIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+    showCurrentResult();
+    updateSearchUI();
+}
+
+function clearSearch() {
+    // Remove highlight rectangle if it exists
+    const oldHighlight = document.getElementById('search-highlight-rect');
+    if (oldHighlight) {
+        oldHighlight.remove();
+    }
+    
+    // Remove class from all results
+    searchResults.forEach((result) => {
+        result.element.classList.remove('search-highlight-current');
+    });
+    
+    highlightedElements = [];
+    searchResults = [];
+    currentSearchIndex = -1;
+    
+    updateSearchUI();
+}
+
+function updateSearchUI() {
+    const resultsSpan = document.getElementById('searchResults');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    
+    if (searchResults.length === 0) {
+        resultsSpan.textContent = '';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        clearBtn.disabled = true;
+    } else {
+        resultsSpan.textContent = `${currentSearchIndex + 1} of ${searchResults.length}`;
+        prevBtn.disabled = false;
+        nextBtn.disabled = false;
+        clearBtn.disabled = false;
+    }
+}
+
+
+
+function jumpToSelectedQueue() {
+    const select = document.getElementById('queueSelect');
+    const queueId = select.value;
+    
+    if (queueId) {
+        jumpToQueue(queueId);
+        // Reset dropdown to placeholder after jumping
+        setTimeout(() => {
+            select.value = '';
+        }, 300);
+    }
+}
+
+
+
+
+// Mapping of colored rectangles to their description boxes
+const roleTooltipMapping = {
+    // Y position range maps to tooltip ID
+    '166.1': 'biller_names',           // #b50000 - Biller
+    '182.54': 'biller_ncpdp_names',    // #ff6700 - Biller (NCPDP)
+    '198.99': 'pcc_names',             // #ffb600 - PCC
+    '215.43': 'insrel_names',          // #fff200 - Ins (Releases)
+    '231.87': 'purchaser_names',       // #8dc63f - Purchaser
+    '248.31': 'pharmclerk_names',      // #41c476 - Pharmacy Clerk
+    '264.75': 'pharmtech_names',       // #00cfff - Pharmacy Tech
+    '281.19': 'pharmacist_names',      // #072 - Pharmacist
+    '297.63': 'qcer_names',            // #df00ff - QCer
+    '314.07': 'insivdf_names',         // #8200ff - Insurance (IVDF)
+    '330.52': 'inselig_names',         // #bb80ff - Insurance (Elig.)
+    '346.96': 'inspa_names'            // #fbb3ff - Insurance (PAs)
+};
+
+function findTooltipForElement(elem) {
+    // Try to find the Y position of the element
+    let y = elem.getAttribute('y');
+    
+    if (!y) {
+        // If no direct Y, try to get from transform or bounding box
+        const bbox = elem.getBBox();
+        y = bbox.y.toFixed(2);
+    }
+    
+    // Find matching tooltip
+    for (let [yPos, tooltipId] of Object.entries(roleTooltipMapping)) {
+        // Check if Y positions match (within 1px tolerance)
+        if (Math.abs(parseFloat(y) - parseFloat(yPos)) < 1) {
+            return tooltipId;
+        }
+    }
+    
+    // Also check if element is close to any Y position
+    for (let [yPos, tooltipId] of Object.entries(roleTooltipMapping)) {
+        const expectedY = parseFloat(yPos);
+        const actualY = parseFloat(y);
+        if (Math.abs(actualY - expectedY) < 5) {
+            return tooltipId;
+        }
+    }
+    
+    return null;
+}
+
+// Key tooltip functionality - shows embedded text boxes from SVG
+function showTooltip(tooltipId) {
+    const keySvg = document.querySelector('#keySvgWrapper svg');
+    if (!keySvg) return;
+    
+    console.log(`Showing tooltip: ${tooltipId}`);
+    
+    // Hide all text boxes first
+    hideAllTooltips();
+    
+    // Show the requested tooltip
+    const tooltip = keySvg.getElementById(tooltipId);
+    if (tooltip) {
+        tooltip.style.display = 'block';
+        tooltip.style.visibility = 'visible';
+        console.log(`Successfully showed ${tooltipId}`);
+    } else {
+        console.log(`Could not find element with ID: ${tooltipId}`);
+    }
+}
+
+function hideAllTooltips() {
+    const keySvg = document.querySelector('#keySvgWrapper svg');
+    if (!keySvg) return;
+    
+    // Hide all text boxes by ID
+    const tooltipIds = [
+        'biller_names', 'biller_ncpdp_names', 'pcc_names', 'insrel_names',
+        'purchaser_names', 'pharmclerk_names', 'pharmtech_names', 'pharmacist_names',
+        'qcer_names', 'insivdf_names', 'inselig_names', 'inspa_names'
+    ];
+    
+    tooltipIds.forEach(id => {
+        const elem = keySvg.getElementById(id);
+        if (elem) {
+            elem.style.display = 'none';
+            elem.style.visibility = 'hidden';
+        }
+    });
+}
+
+function attachKeyHoverListeners() {
+    const keySvg = document.querySelector('#keySvgWrapper svg');
+    if (!keySvg) {
+        console.log('Key SVG not found');
+        return;
+    }
+    
+    console.log('Attaching key hover listeners...');
+    
+    // Hide all tooltips initially
+    hideAllTooltips();
+    
+    // Find all colored rectangles (10.68x10.68 size indicates role boxes)
+    const colorBoxes = keySvg.querySelectorAll('rect[width="10.68"][height="10.68"]');
+    
+    console.log(`Found ${colorBoxes.length} color boxes`);
+    
+    colorBoxes.forEach(box => {
+        const y = box.getAttribute('y');
+        const tooltipId = findTooltipForElement(box);
+        
+        if (tooltipId) {
+            console.log(`Mapped Y=${y} to ${tooltipId}`);
+            box.style.cursor = 'pointer';
+            
+            // Use mouseenter/mouseleave which work better with dragging
+            box.addEventListener('mouseenter', function(e) {
+                e.stopPropagation();
+                showTooltip(tooltipId);
+            });
+            
+            box.addEventListener('mouseleave', function(e) {
+                e.stopPropagation();
+                hideAllTooltips();
+            });
+        }
+    });
+    
+    // Also attach to text labels next to the boxes
+    const textElements = keySvg.querySelectorAll('text');
+    let attachedCount = 0;
+    
+    textElements.forEach(text => {
+        const transform = text.getAttribute('transform');
+        if (transform && transform.includes('translate')) {
+            // Extract Y from transform
+            const match = transform.match(/translate\(([\d.]+)\s+([\d.]+)\)/);
+            if (match) {
+                const y = parseFloat(match[2]);
+                
+                // Check if this text is near any color box
+                for (let [yPos, tooltipId] of Object.entries(roleTooltipMapping)) {
+                    const boxY = parseFloat(yPos);
+                    // Text is typically 8px below box center
+                    if (Math.abs(y - (boxY + 8)) < 10) {
+                        text.style.cursor = 'pointer';
+                        
+                        text.addEventListener('mouseenter', function(e) {
+                            e.stopPropagation();
+                            showTooltip(tooltipId);
+                        });
+                        
+                        text.addEventListener('mouseleave', function(e) {
+                            e.stopPropagation();
+                            hideAllTooltips();
+                        });
+                        
+                        attachedCount++;
+                        break;
+                    }
+                }
+            }
+        }
+    });
+    
+    console.log(`Attached hover listeners to ${attachedCount} text labels`);
+}
+
+// Attach listeners after key SVG loads - try multiple times to ensure it works
+async function initKeyTooltips() {
+    // Wait for SVG to be fully loaded
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    for (let i = 0; i < 5; i++) {
+        const keySvg = document.querySelector('#keySvgWrapper svg');
+        if (keySvg) {
+            attachKeyHoverListeners();
+            break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+}
+
+// Hook into the init function
+const originalInit = init;
+init = function() {
+    if (originalInit) originalInit();
+    initKeyTooltips();
+};
+
+
+// Version checking functionality
+let lastModified = null;
+let updateCheckInterval = null;
+let updateDismissed = false;
+
+async function checkForUpdates() {
+    // Don't check if user dismissed the banner
+    if (updateDismissed) return;
+    
+    try {
+        // Check if the SVG file has been updated
+        const response = await fetch('CareTend_Workflow_Flowchart.svg', {
+            method: 'HEAD',
+            cache: 'no-cache'
+        });
+        
+        const currentModified = response.headers.get('Last-Modified');
+        
+        if (lastModified === null) {
+            // First check - just store the value
+            lastModified = currentModified;
+            console.log('Version check initialized:', currentModified);
+        } else if (currentModified && currentModified !== lastModified) {
+            // File has been updated!
+            console.log('New version detected!');
+            console.log('Old:', lastModified);
+            console.log('New:', currentModified);
+            showUpdateBanner();
+        }
+    } catch (error) {
+        console.log('Version check failed (this is normal):', error.message);
+        // Silently fail - don't bother the user
+    }
+}
+
+function showUpdateBanner() {
+    const banner = document.getElementById('updateBanner');
+    if (banner) {
+        banner.classList.add('show');
+        // Stop checking once we've shown the banner
+        if (updateCheckInterval) {
+            clearInterval(updateCheckInterval);
+        }
+    }
+}
+
+function dismissUpdateBanner() {
+    const banner = document.getElementById('updateBanner');
+    if (banner) {
+        banner.classList.remove('show');
+        updateDismissed = true;
+    }
+}
+
+function refreshPage() {
+    // Save current state if desired (optional)
+    // For now, just do a hard refresh to get new content
+    window.location.reload(true);
+}
+
+// Start checking for updates every 5 minutes after page loads
+window.addEventListener('load', () => {
+    // Wait 30 seconds after page load before first check
+    setTimeout(() => {
+        checkForUpdates();
+        // Then check every 5 minutes
+        updateCheckInterval = setInterval(checkForUpdates, 5 * 60 * 1000);
+    }, 30000);
+});
+
+
+document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') zoomIn();
+    else if (e.key === '-') zoomOut();
+    else if (e.key === '0') resetView();
+    else if (e.key === 'f' || e.key === 'F') fitToScreen();
+    else if (e.key === 'k' || e.key === 'K') toggleKey();
+    else if (e.key === '?' || e.key === 'h' || e.key === 'H') toggleInstructions();
+});
+</script>
+</body>
+</html>
