@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareTend Workflow Flowchart</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔄</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1::before {
+            content: '🔄 ';
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button {
+            background: #5a67d8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        button:hover {
+            background: #4c51bf;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .fullscreen-btn {
+            background: #e53e3e;
+        }
+
+        .fullscreen-btn:hover {
+            background: #c53030;
+        }
+
+        #panModeBtn {
+            background: #5a67d8;
+        }
+
+        #panModeBtn.pan-active {
+            background: #28a745;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            border-left: 2px solid rgba(255,255,255,0.3);
+            padding-left: 10px;
+            margin-left: 10px;
+        }
+
+        #searchInput {
+            padding: 6px 10px;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 6px;
+            font-size: 13px;
+            width: 200px;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .search-controls button {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .bookmarks {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-left: 2px solid rgba(255,255,255,0.3);
+            padding-left: 15px;
+            margin-left: 15px;
+        }
+
+        .queue-dropdown {
+            padding: 7px 12px;
+            border: 2px solid #28a745;
+            border-radius: 6px;
+            background: white;
+            color: #495057;
+            font-size: 13px;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 250px;
+            transition: all 0.2s ease;
+        }
+
+        .queue-dropdown:hover {
+            border-color: #218838;
+            background: #f8f9fa;
+        }
+
+        .queue-dropdown:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            border-left: 2px solid rgba(255,255,255,0.3);
+            padding-left: 10px;
+            margin-left: 10px;
+        }
+
+        .zoom-display {
+            color: white;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .key-panel {
+            width: 420px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            position: relative;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .key-panel.hidden {
+            transform: translateX(-420px);
+        }
+
+        .key-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .key-header::before {
+            content: '🔑 ';
+        }
+
+        .key-toggle {
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            z-index: 101;
+            left: 420px;
+            transition: left 0.3s ease;
+        }
+
+        .key-panel.hidden .key-toggle {
+            left: 0;
+        }
+
+        .key-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .key-main-area {
+            width: 320px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .key-viewer {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        .key-viewer:active {
+            cursor: grabbing;
+        }
+
+        .key-svg-wrapper {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            transform: scale(1.30);
+            transform-origin: top left;
+            transition: transform 0.3s ease;
+        }
+
+        .key-svg-wrapper svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .key-zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .key-zoom-controls button {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            font-size: 18px;
+            border-radius: 6px;
+        }
+
+        .key-tooltip-area {
+            width: 100px;
+            background: #f8f9fa;
+            border-left: 2px solid #e9ecef;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+            display: none;
+        }
+
+        .flowchart-panel {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            overflow: auto;
+            background: white;
+        }
+
+        .viewer-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: auto;
+            background: white;
+            cursor: default;
+        }
+
+        .viewer-container.grabbing {
+            cursor: grabbing;
+        }
+
+        #svgWrapper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: auto;
+        }
+
+        #svgWrapper svg {
+            display: block;
+        }
+
+        .instructions {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 500px;
+            display: none;
+        }
+
+        .instructions.show {
+            display: block;
+        }
+
+        .instructions h3 {
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 0;
+        }
+
+        .instructions strong {
+            color: #764ba2;
+        }
+
+        .instructions-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .instructions-close:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+
+        .legend {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            text-align: center;
+            font-size: 12px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(102, 126, 234, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10002;
+        }
+
+        .password-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .password-modal h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .password-modal input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .password-modal button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        .password-error {
+            color: #e53e3e;
+            margin-top: 10px;
+            display: none;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .shake {
+            animation: shake 0.3s;
+        }
+
+        .update-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #000;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .update-banner.show {
+            display: flex;
+        }
+
+        .update-banner-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .update-banner-icon {
+            font-size: 18px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .update-refresh-btn {
+            background: white;
+            color: #ff9800;
+            border: 2px solid white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .update-refresh-btn:hover {
+            background: #f5f5f5;
+            transform: translateY(-1px);
+        }
+
+        .update-dismiss-btn {
+            background: transparent;
+            color: #000;
+            border: 2px solid rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .update-dismiss-btn:hover {
+            background: rgba(0,0,0,0.1);
+        }
+
+        /* Hide all role name tooltips by default */
+        #biller_names,
+        #biller_ncpdp_names,
+        #pcc_names,
+        #insrel_names,
+        #purchaser_names,
+        #pharmclerk_names,
+        #pharmtech_names,
+        #pharmacist_names,
+        #qcer_names,
+        #insivdf_names,
+        #inselig_names,
+        #inspa_names {
+            display: none;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- Password Protection -->
+    <div class="password-overlay" id="passwordOverlay">
+        <div class="password-modal">
+            <h2>🔒 Protected Content</h2>
+            <p style="margin-bottom: 20px; color: #666;">Please enter the password to view the flowchart</p>
+            <input type="password" id="passwordInput" placeholder="Enter password" />
+            <button onclick="checkPassword()">Access Flowchart</button>
+            <p class="password-error" id="passwordError">Incorrect password. Please try again.</p>
+        </div>
+    </div>
+
+    <!-- Update Notification Banner -->
+    <div class="update-banner" id="updateBanner">
+        <div class="update-banner-text">
+            <span class="update-banner-icon">🔄</span>
+            <span>A new version of the flowchart is available!</span>
+        </div>
+        <button onclick="refreshPage()" class="update-refresh-btn">Refresh Now</button>
+        <button onclick="dismissUpdateBanner()" class="update-dismiss-btn">Later</button>
+    </div>
+
+    <div class="loading" id="loading">
+        Loading Flowchart...
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>CareTend Workflow Flowchart</h1>
+            <div class="controls">
+                <button onclick="toggleKey()">🔑 Toggle Key</button>
+                <button onclick="togglePanMode()" id="panModeBtn" title="Switch to Pan Mode">📜 Scroll Mode</button>
+                <button onclick="resetView()">🏠 Reset View</button>
+                <button onclick="fitToScreen()">📐 Fit to Screen</button>
+                <button onclick="openFullscreen()" class="fullscreen-btn">⛶ Open Fullscreen</button>
+                <button onclick="toggleInstructions()">❓ Help</button>
+                
+                <div class="search-controls">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search flowchart..."
+                        onkeypress="if(event.key==='Enter') searchFlowchart()"
+                    />
+                    <button onclick="searchFlowchart()" title="Search">🔍</button>
+                    <button onclick="previousResult()" title="Previous" id="prevBtn">←</button>
+                    <button onclick="nextResult()" title="Next" id="nextBtn">→</button>
+                    <button onclick="clearSearch()" title="Clear" id="clearBtn">✕</button>
+                    <span id="resultCount" style="color: white; font-weight: 600;"></span>
+                </div>
+
+                <div class="bookmarks">
+                    <label for="queueSelect" style="font-weight: 600; color: white; font-size: 13px; margin-right: 5px;">Jump to Queue:</label>
+                    <select id="queueSelect" class="queue-dropdown" onchange="jumpToSelectedQueue()">
+                        <option value="">-- Select Queue --</option>
+                        <option value="anchor_eprescription">ePrescription Manager</option>
+                        <option value="anchor_orderentry">Order Entry / Completion</option>
+                        <option value="anchor_newrxs">Patients to Contact (New Rxs)</option>
+                        <option value="anchor_refills">Patients to Contact (Refills)</option>
+                        <option value="anchor_processrx">Process Rx / Print Labels</option>
+                        <option value="anchor_printdt">Print Delivery Tickets</option>
+                        <option value="anchor_dtconfirm">Delivery Ticket Confirmation</option>
+                        <option value="anchor_incomplete">Patients with Incomplete Information</option>
+                        <option value="anchor_pharmacy_claim">Pharmacy Claim Manager</option>
+                    </select>
+                </div>
+
+                <div class="zoom-controls">
+                    <button onclick="zoomIn()">🔍+</button>
+                    <button onclick="zoomOut()">🔍−</button>
+                    <span class="zoom-display" id="zoomDisplay">150%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="key-panel" id="keyPanel">
+                <div class="key-header">
+                    Key
+                </div>
+                <div class="key-content">
+                    <div class="key-main-area">
+                        <div class="key-viewer" id="keyViewer">
+                            <div class="key-svg-wrapper" id="keySvgWrapper">
+                                <!-- Key SVG will be loaded here -->
+                            </div>
+                        </div>
+                        <div class="key-zoom-controls">
+                            <button onclick="keyZoomIn()" title="Zoom in">+</button>
+                            <button onclick="keyZoomOut()" title="Zoom out">−</button>
+                            <button onclick="keyResetZoom()" title="Reset">↺</button>
+                        </div>
+                    </div>
+                    <div class="key-tooltip-area" id="keyTooltipArea">
+                        <!-- Role description will appear here -->
+                    </div>
+                </div>
+                <button class="key-toggle" onclick="toggleKey()">◀</button>
+            </div>
+
+            <div class="flowchart-panel">
+                <div class="viewer-container" id="viewerContainer">
+                    <div id="svgWrapper">
+                        <!-- Main flowchart SVG will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            Use 📜/🖐️ button to switch modes | 🔍 Scroll wheel zooms in Pan mode, +/− buttons zoom in both modes | 📍 Use bookmark buttons to jump to workflow queues | 🔗 Click blue SOP links to open procedures | ⬛ Click black navigation boxes to jump between queues | 👆 Hover over Job Roles in Key to see team members
+        </div>
+    </div>
+
+    <div class="instructions" id="instructions">
+        <button class="instructions-close" onclick="toggleInstructions()" title="Close">×</button>
+        <h3>How to Use</h3>
+        <ul>
+            <li><strong>Pan:</strong> Switch to Pan Mode, then click and drag</li>
+            <li><strong>Scroll:</strong> Use mouse wheel (default mode)</li>
+            <li><strong>Zoom:</strong> Use +/− buttons (always), or scroll wheel (Pan mode only)</li>
+            <li><strong>Navigate:</strong> Use dropdown to jump to queues</li>
+            <li><strong>Jump in Flow:</strong> Click black "Proceed to" boxes</li>
+            <li><strong>Key:</strong> Toggle with 🔑 button or K key</li>
+            <li><strong>Key Pan/Zoom:</strong> Drag and use +/− buttons in key</li>
+            <li><strong>Hover over Job Roles:</strong> In the Key to see who's in that role</li>
+            <li><strong>SOP Links:</strong> Click to open in new tab</li>
+            <li><strong>Reset:</strong> Click 🏠 to return to start</li>
+            <li><strong>Fit:</strong> Click 📐 to see entire flowchart</li>
+            <li><strong>Fullscreen:</strong> Click ⛶ to open in new window</li>
+        </ul>
+    </div>
+
+    <script>
+        // Password protection (change password on line below)
+        const CORRECT_PASSWORD = 'redchip26';
+        
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            const overlay = document.getElementById('passwordOverlay');
+            
+            if (input.value === CORRECT_PASSWORD) {
+                sessionStorage.setItem('flowchartAccess', 'granted');
+                overlay.style.display = 'none';
+                init();
+            } else {
+                error.style.display = 'block';
+                input.value = '';
+                input.parentElement.classList.add('shake');
+                setTimeout(() => input.parentElement.classList.remove('shake'), 300);
+            }
+        }
+
+        document.getElementById('passwordInput')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
+
+        // Check if already authenticated
+        if (sessionStorage.getItem('flowchartAccess') === 'granted') {
+            document.getElementById('passwordOverlay').style.display = 'none';
+            window.addEventListener('load', init);
+        }
+
+        // Bookmark locations
+        const bookmarkLocations = {
+            pan: [
+                {"name": "ePrescription Manager", "id": "anchor_eprescription", "x": 1089.23, "y": 0},
+                {"name": "Order Entry / Completion", "id": "anchor_orderentry", "x": 1089.23, "y": 530.91},
+                {"name": "Patients to Contact (New Rxs)", "id": "anchor_newrxs", "x": 1089.23, "y": 1167.87},
+                {"name": "Patients to Contact (Refills)", "id": "anchor_refills", "x": 1089.23, "y": 4561.47},
+                {"name": "Process Rx / Print Labels", "id": "anchor_processrx", "x": 1089.23, "y": 7893.53},
+                {"name": "Print Delivery Tickets", "id": "anchor_printdt", "x": 1089.23, "y": 8782.79},
+                {"name": "Delivery Ticket Confirmation", "id": "anchor_dtconfirm", "x": 1089.23, "y": 10168.47},
+                {"name": "Patients with Incomplete Information", "id": "anchor_incomplete", "x": 1089.23, "y": 10743.41},
+                {"name": "Pharmacy Claim Manager", "id": "anchor_pharmacy_claim", "x": 1089.23, "y": 11770.22}
+            ],
+            scroll: [
+                {"name": "ePrescription Manager", "id": "anchor_eprescription", "x": 1605.72, "y": 0},
+                {"name": "Order Entry / Completion", "id": "anchor_orderentry", "x": 1605.72, "y": 530.91},
+                {"name": "Patients to Contact (New Rxs)", "id": "anchor_newrxs", "x": 1605.72, "y": 1167.87},
+                {"name": "Patients to Contact (Refills)", "id": "anchor_refills", "x": 1605.72, "y": 4561.47},
+                {"name": "Process Rx / Print Labels", "id": "anchor_processrx", "x": 1605.72, "y": 7893.53},
+                {"name": "Print Delivery Tickets", "id": "anchor_printdt", "x": 1605.72, "y": 8782.79},
+                {"name": "Delivery Ticket Confirmation", "id": "anchor_dtconfirm", "x": 1605.72, "y": 10168.47},
+                {"name": "Patients with Incomplete Information", "id": "anchor_incomplete", "x": 1605.72, "y": 10743.41},
+                {"name": "Pharmacy Claim Manager", "id": "anchor_pharmacy_claim", "x": 1605.72, "y": 11770.22}
+            ]
+        };
+
+        // SOP Links
+        const sopBoxes = [
+            {"id": "CIBD", "url": "https://www.sweetprocess.com/procedures/OW545cM3Dvj/send-cibd-order-form-and-process-returned-po/"},
+            {"id": "CHLA", "url": "https://www.sweetprocess.com/procedures/46vDAfwzW5K/send-and-document-chla-advancement/"},
+            {"id": "Create_Delivery_Ticket_DT_", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"},
+            {"id": "Create_Delivery_Ticket_DT_-2", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"},
+            {"id": "Create_Delivery_Ticket_DT_-3", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"},
+            {"id": "Create_Delivery_Ticket_DT_-4", "url": "https://www.sweetprocess.com/procedures/aDLj9t8QAWy/create-delivery-ticket-dt/"},
+            {"id": "Request_Eligibility_and_Auth_Check", "url": "https://www.sweetprocess.com/procedures/JBpWyH36w9L/request-eligibility-and-auth-check/"},
+            {"id": "Request_Eligibility_and_Auth_Check-2", "url": "https://www.sweetprocess.com/procedures/JBpWyH36w9L/request-eligibility-and-auth-check/"},
+            {"id": "QC_Delivery_Ticket_DT_and_Make_Ready_to_Fill", "url": "https://www.sweetprocess.com/procedures/5jp68iEojya/qc-delivery-ticket-dt-and-make-ready-to-fill/"},
+            {"id": "QC_Delivery_Ticket_DT_and_Make_Ready_to_Fill-2", "url": "https://www.sweetprocess.com/procedures/5jp68iEojya/qc-delivery-ticket-dt-and-make-ready-to-fill/"}
+        ];
+
+        // State variables
+        let currentZoom = 3.0;
+        let currentX = -400;
+        let currentY = 80;
+        let isDragging = false;
+        let startX, startY;
+        let lastX = currentX;
+        let lastY = currentY;
+        const minZoom = 0.1;
+        const maxZoom = 10;
+
+        // Key pan/zoom state
+        let keyZoom = 1.30;
+        let keyTranslateX = 0;
+        let keyTranslateY = 0;
+        let isKeyDragging = false;
+        let keyStartX, keyStartY;
+        const keyMinZoom = 0.5;
+        const keyMaxZoom = 3;
+
+        // Search state
+        let searchResults = [];
+        let currentSearchIndex = -1;
+
+        // Pan/Scroll mode toggle
+        let isPanMode = false;
+
+        async function loadSVGs() {
+            try {
+                const mainResponse = await fetch('CareTend_Workflow_Flowchart.svg');
+                const mainSvg = await mainResponse.text();
+                document.getElementById('svgWrapper').innerHTML = mainSvg;
+
+                const keyResponse = await fetch('00_key.svg');
+                const keySvg = await keyResponse.text();
+                document.getElementById('keySvgWrapper').innerHTML = keySvg;
+
+                setupSOPLinks();
+                setupNavigation();
+                attachKeyHoverListeners();
+            } catch (error) {
+                console.error('Error loading SVGs:', error);
+                alert('Error loading flowchart. Please refresh the page.');
+            }
+        }
+
+        function setupSOPLinks() {
+            sopBoxes.forEach(box => {
+                const element = document.getElementById(box.id);
+                if (element) {
+                    element.style.cursor = 'pointer';
+                    element.style.fill = 'none';
+                    element.style.stroke = 'blue';
+                    element.style.strokeWidth = '2';
+                    element.style.opacity = '0';
+                    
+                    element.addEventListener('mouseenter', () => {
+                        element.style.opacity = '0.3';
+                    });
+                    
+                    element.addEventListener('mouseleave', () => {
+                        element.style.opacity = '0';
+                    });
+                    
+                    element.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        window.open(box.url, '_blank');
+                    });
+                }
+            });
+        }
+
+        function setupNavigation() {
+            const svg = document.querySelector('#svgWrapper > svg');
+            if (!svg) return;
+
+            // Setup click handlers for both pan and scroll anchor sets
+            const allBookmarks = [...bookmarkLocations.pan, ...bookmarkLocations.scroll];
+            const uniqueIds = [...new Set(allBookmarks.map(b => b.id))];
+            
+            uniqueIds.forEach(anchorId => {
+                // Find anchors in both layers (pan and scroll with _copy suffix)
+                const panAnchor = svg.getElementById(anchorId);
+                const scrollAnchor = svg.getElementById(anchorId + '_copy');
+                
+                [panAnchor, scrollAnchor].forEach(anchor => {
+                    if (anchor) {
+                        const rect = anchor.querySelector('rect');
+                        if (rect) {
+                            rect.style.cursor = 'pointer';
+                            rect.style.opacity = '0';
+                            
+                            rect.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                jumpToQueue(anchorId);
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        function jumpToQueue(queueId) {
+            // Get the appropriate bookmark set based on current mode
+            const bookmarks = isPanMode ? bookmarkLocations.pan : bookmarkLocations.scroll;
+            const bookmark = bookmarks.find(b => b.id === queueId);
+            if (!bookmark) return;
+
+            console.log('jumpToQueue:', queueId, 'isPanMode:', isPanMode);
+            console.log('Bookmark:', bookmark);
+
+            if (!isPanMode) {
+                // In scroll mode: use scroll anchors with additional left offset
+                const svg = document.querySelector('#svgWrapper > svg');
+                const container = document.getElementById('svgWrapper');
+                if (svg && container) {
+                    const scaledY = bookmark.y * currentZoom;
+                    const scaledX = bookmark.x * currentZoom;
+                    const additionalLeftOffset = 300 * currentZoom;
+                    
+                    console.log('Scroll mode - currentZoom:', currentZoom);
+                    console.log('scaledX:', scaledX, 'scaledY:', scaledY);
+                    console.log('additionalLeftOffset:', additionalLeftOffset);
+                    console.log('Setting scrollLeft to:', scaledX - (container.clientWidth / 2) + additionalLeftOffset);
+                    
+                    container.scrollTop = scaledY - (container.clientHeight / 2);
+                    container.scrollLeft = scaledX - (container.clientWidth / 2) + additionalLeftOffset;
+                }
+            } else {
+                // In pan mode: use pan anchors
+                currentZoom = 3.0;
+                currentX = -400 - bookmark.x * currentZoom;
+                currentY = 80 - bookmark.y * currentZoom;
+                updateTransform();
+                updateZoomDisplay();
+            }
+        }
+
+        function jumpToSelectedQueue() {
+            const select = document.getElementById('queueSelect');
+            const queueId = select.value;
+            
+            if (queueId) {
+                jumpToQueue(queueId);
+                setTimeout(() => {
+                    select.value = '';
+                }, 300);
+            }
+        }
+
+        function togglePanMode() {
+            isPanMode = !isPanMode;
+            const btn = document.getElementById('panModeBtn');
+            const svgWrapper = document.getElementById('svgWrapper');
+            const viewerContainer = document.getElementById('viewerContainer');
+            const svg = document.querySelector('#svgWrapper > svg');
+            
+            if (isPanMode) {
+                btn.textContent = '🖐️ Pan Mode';
+                btn.classList.add('pan-active');
+                btn.title = 'Switch to Scroll Mode';
+                
+                // Pan mode setup
+                if (svgWrapper) {
+                    svgWrapper.style.cursor = 'grab';
+                    svgWrapper.style.overflow = 'hidden';
+                }
+                if (viewerContainer) {
+                    viewerContainer.style.overflow = 'hidden';
+                }
+                
+                // Position SVG for panning
+                if (svg) {
+                    svg.style.margin = '0';
+                    svg.style.marginLeft = '0';
+                    svg.style.position = 'absolute';
+                    svg.style.top = '0';
+                    svg.style.left = '0';
+                    svg.style.transformOrigin = 'top left';
+                    
+                    // Start at flowchart beginning
+                    currentX = -400;
+                    currentY = 80;
+                    currentZoom = 3.0;
+                    svg.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentZoom})`;
+                }
+                updateZoomDisplay();
+            } else {
+                btn.textContent = '📜 Scroll Mode';
+                btn.classList.remove('pan-active');
+                btn.title = 'Switch to Pan Mode';
+                
+                // Scroll mode setup
+                if (svgWrapper) {
+                    svgWrapper.style.cursor = 'default';
+                    svgWrapper.style.overflow = 'auto';
+                    svgWrapper.scrollTop = 0;
+                    svgWrapper.scrollLeft = 0;
+                }
+                if (viewerContainer) {
+                    viewerContainer.style.overflow = 'auto';
+                    viewerContainer.scrollTop = 0;
+                    viewerContainer.scrollLeft = 0;
+                }
+                
+                // Position SVG for scrolling (use transform like pan mode)
+                if (svg) {
+                    svg.style.transformOrigin = '0 0';
+                    svg.style.transform = `scale(${currentZoom})`;
+                    svg.style.position = 'relative';
+                    svg.style.top = 'auto';
+                    svg.style.left = 'auto';
+                    svg.style.display = 'block';
+                }
+            }
+        }
+
+        function updateTransform() {
+            const svg = document.querySelector('#svgWrapper > svg');
+            if (svg) {
+                if (isPanMode) {
+                    // In pan mode: apply transform for panning/zooming
+                    svg.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentZoom})`;
+                    svg.style.transformOrigin = 'top left';
+                    svg.style.position = 'absolute';
+                } else {
+                    // In scroll mode: only apply zoom, centered with margin auto
+                    svg.style.transform = `scale(${currentZoom})`;
+                    svg.style.transformOrigin = 'top left';
+                    svg.style.position = 'relative';
+                }
+            }
+        }
+
+        function zoomIn() {
+            currentZoom = Math.min(maxZoom, currentZoom * 1.2);
+            updateTransform();
+            updateZoomDisplay();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(minZoom, currentZoom * 0.8);
+            updateTransform();
+            updateZoomDisplay();
+        }
+
+        function resetView() {
+            if (!isPanMode) {
+                // In scroll mode, just scroll to top
+                const container = document.getElementById('svgWrapper');
+                if (container) {
+                    container.scrollTop = 0;
+                    container.scrollLeft = 0;
+                }
+                return;
+            }
+            currentZoom = 3.0;
+            currentX = -400;
+            currentY = 80;
+            lastX = currentX;
+            lastY = currentY;
+            updateTransform();
+            updateZoomDisplay();
+        }
+
+        function fitToScreen() {
+            const svg = document.querySelector('#svgWrapper > svg');
+            const container = document.getElementById('viewerContainer');
+            if (!svg || !container) return;
+
+            const svgRect = svg.getBBox();
+            const containerRect = container.getBoundingClientRect();
+            
+            const scaleX = containerRect.width / svgRect.width;
+            const scaleY = containerRect.height / svgRect.height;
+            currentZoom = Math.min(scaleX, scaleY) * 0.9;
+            
+            if (isPanMode) {
+                currentX = (containerRect.width - svgRect.width * currentZoom) / 2;
+                currentY = (containerRect.height - svgRect.height * currentZoom) / 2;
+            }
+            
+            updateTransform();
+            updateZoomDisplay();
+        }
+
+        function updateZoomDisplay() {
+            document.getElementById('zoomDisplay').textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        function toggleKey() {
+            document.getElementById('keyPanel').classList.toggle('hidden');
+        }
+
+        function toggleInstructions() {
+            document.getElementById('instructions').classList.toggle('show');
+        }
+
+        function openFullscreen() {
+            window.open(window.location.href, '_blank');
+        }
+
+        // Key zoom functions
+        function keyZoomIn() {
+            keyZoom = Math.min(keyMaxZoom, keyZoom * 1.1);
+            updateKeyTransform();
+        }
+
+        function keyZoomOut() {
+            keyZoom = Math.max(keyMinZoom, keyZoom * 0.9);
+            updateKeyTransform();
+        }
+
+        function keyResetZoom() {
+            keyZoom = 2.2;
+            keyTranslateX = 0;
+            keyTranslateY = 0;
+            updateKeyTransform();
+        }
+
+        function updateKeyTransform() {
+            const wrapper = document.getElementById('keySvgWrapper');
+            if (wrapper) {
+                wrapper.style.transform = `translate(${keyTranslateX}px, ${keyTranslateY}px) scale(${keyZoom})`;
+            }
+        }
+
+        // Search functionality
+        function searchFlowchart() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!query) return;
+
+            const svg = document.querySelector('#svgWrapper > svg');
+            if (!svg) return;
+
+            // Clear previous search
+            clearSearch();
+
+            // Find all text elements containing the query
+            const textElements = svg.querySelectorAll('text');
+            textElements.forEach(elem => {
+                if (elem.textContent.toLowerCase().includes(query)) {
+                    searchResults.push({
+                        element: elem,
+                        highlightElement: elem
+                    });
+                }
+            });
+
+            if (searchResults.length > 0) {
+                currentSearchIndex = 0;
+                showCurrentResult();
+                updateSearchUI();
+            } else {
+                alert('No results found');
+            }
+        }
+
+        function showCurrentResult() {
+            if (searchResults.length === 0 || currentSearchIndex < 0) return;
+            
+            // Remove previous highlight
+            const oldHighlight = document.getElementById('search-highlight-rect');
+            if (oldHighlight) {
+                oldHighlight.remove();
+            }
+            
+            // Remove class from previous result
+            searchResults.forEach((result) => {
+                result.element.classList.remove('search-highlight-current');
+            });
+            
+            // Add class to current result
+            const current = searchResults[currentSearchIndex];
+            current.highlightElement.classList.add('search-highlight-current');
+            
+            // Create a yellow rectangle behind the text
+            try {
+                const textElement = current.element;
+                const bbox = textElement.getBBox();
+                const svg = document.querySelector('#svgWrapper > svg');
+                
+                // Get the transform of the text element
+                const transform = textElement.getAttribute('transform') || '';
+                
+                // Create a yellow rectangle
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('id', 'search-highlight-rect');
+                rect.setAttribute('x', bbox.x - 2);
+                rect.setAttribute('y', bbox.y - 2);
+                rect.setAttribute('width', bbox.width + 4);
+                rect.setAttribute('height', bbox.height + 4);
+                rect.setAttribute('fill', '#ffff00');
+                rect.setAttribute('opacity', '0.9');
+                rect.setAttribute('rx', '2');
+                rect.setAttribute('ry', '2');
+                
+                // Apply the same transform as the text element
+                if (transform) {
+                    rect.setAttribute('transform', transform);
+                }
+                
+                // Insert the rectangle into the same parent as the text, right before it
+                textElement.parentNode.insertBefore(rect, textElement);
+            } catch (e) {
+                console.error('Error creating highlight rect:', e);
+            }
+            
+            // Get element position
+            const elem = current.element;
+            const rect = elem.getBoundingClientRect();
+            const container = isPanMode ? document.getElementById('viewerContainer') : document.getElementById('svgWrapper');
+            const viewerRect = container.getBoundingClientRect();
+            
+            // Calculate offset to center the element
+            const centerX = viewerRect.width / 2;
+            const centerY = viewerRect.height / 2;
+            const elemCenterX = rect.left + rect.width / 2 - viewerRect.left;
+            const elemCenterY = rect.top + rect.height / 2 - viewerRect.top;
+            
+            if (isPanMode) {
+                // In pan mode: adjust transform
+                const offsetX = centerX - elemCenterX;
+                const offsetY = centerY - elemCenterY;
+                
+                currentX += offsetX;
+                currentY += offsetY;
+                currentZoom = 3.0;
+                
+                updateTransform();
+                updateZoomDisplay();
+            } else {
+                // In scroll mode: scroll to element
+                const svg = document.querySelector('#svgWrapper > svg');
+                const svgRect = svg.getBoundingClientRect();
+                const elemRelativeY = rect.top - svgRect.top;
+                
+                container.scrollTop = elemRelativeY - centerY;
+            }
+        }
+
+        function clearSearch() {
+            // Remove highlight rectangle if it exists
+            const oldHighlight = document.getElementById('search-highlight-rect');
+            if (oldHighlight) {
+                oldHighlight.remove();
+            }
+            
+            // Remove class from all results
+            searchResults.forEach((result) => {
+                result.element.classList.remove('search-highlight-current');
+            });
+            
+            searchResults = [];
+            currentSearchIndex = -1;
+            
+            updateSearchUI();
+        }
+
+        function previousResult() {
+            if (searchResults.length === 0) return;
+            currentSearchIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+            showCurrentResult();
+            updateSearchUI();
+        }
+
+        function nextResult() {
+            if (searchResults.length === 0) return;
+            currentSearchIndex = (currentSearchIndex + 1) % searchResults.length;
+            showCurrentResult();
+            updateSearchUI();
+        }
+
+        function updateSearchUI() {
+            const resultCount = document.getElementById('resultCount');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            
+            if (searchResults.length > 0) {
+                resultCount.textContent = `${currentSearchIndex + 1} of ${searchResults.length}`;
+                prevBtn.disabled = false;
+                nextBtn.disabled = false;
+                clearBtn.disabled = false;
+            } else {
+                resultCount.textContent = '';
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                clearBtn.disabled = true;
+            }
+        }
+
+        // Key hover functionality
+        const roleTooltipMapping = {
+            '166.1': 'biller_names',
+            '182.54': 'biller_ncpdp_names',
+            '198.99': 'pcc_names',
+            '215.43': 'insrel_names',
+            '231.87': 'purchaser_names',
+            '248.31': 'pharmclerk_names',
+            '264.75': 'pharmtech_names',
+            '281.19': 'pharmacist_names',
+            '297.63': 'qcer_names',
+            '314.07': 'insivdf_names',
+            '330.52': 'inselig_names',
+            '346.96': 'inspa_names'
+        };
+
+        function findTooltipForElement(elem) {
+            let y = elem.getAttribute('y');
+            
+            if (!y) {
+                const bbox = elem.getBBox();
+                y = bbox.y.toFixed(2);
+            }
+            
+            for (let [yPos, tooltipId] of Object.entries(roleTooltipMapping)) {
+                if (Math.abs(parseFloat(y) - parseFloat(yPos)) < 5) {
+                    return tooltipId;
+                }
+            }
+            
+            return null;
+        }
+
+        function showTooltip(tooltipId) {
+            const keySvg = document.querySelector('#keySvgWrapper svg');
+            if (!keySvg) return;
+            
+            // Hide all text boxes first
+            hideAllTooltips();
+            
+            // Show the requested tooltip with inline styles (overrides CSS)
+            const tooltip = keySvg.getElementById(tooltipId);
+            if (tooltip) {
+                tooltip.style.setProperty('display', 'block', 'important');
+                tooltip.style.setProperty('visibility', 'visible', 'important');
+            }
+        }
+
+        function hideAllTooltips() {
+            const keySvg = document.querySelector('#keySvgWrapper svg');
+            if (!keySvg) return;
+            
+            const tooltipIds = [
+                'biller_names', 'biller_ncpdp_names', 'pcc_names', 'insrel_names',
+                'purchaser_names', 'pharmclerk_names', 'pharmtech_names', 'pharmacist_names',
+                'qcer_names', 'insivdf_names', 'inselig_names', 'inspa_names'
+            ];
+            
+            tooltipIds.forEach(id => {
+                const elem = keySvg.getElementById(id);
+                if (elem) {
+                    elem.style.display = 'none';
+                    elem.style.visibility = 'hidden';
+                }
+            });
+        }
+
+        function attachKeyHoverListeners() {
+            const keySvg = document.querySelector('#keySvgWrapper svg');
+            if (!keySvg) return;
+            
+            // Hide all tooltips initially
+            hideAllTooltips();
+            
+            // Find all colored rectangles (10.68x10.68 size indicates role boxes)
+            const colorBoxes = keySvg.querySelectorAll('rect[width="10.68"][height="10.68"]');
+            
+            colorBoxes.forEach(box => {
+                const y = box.getAttribute('y');
+                const tooltipId = findTooltipForElement(box);
+                
+                if (tooltipId) {
+                    box.style.cursor = 'pointer';
+                    
+                    box.addEventListener('mouseenter', function(e) {
+                        e.stopPropagation();
+                        showTooltip(tooltipId);
+                    });
+                    
+                    box.addEventListener('mouseleave', function(e) {
+                        e.stopPropagation();
+                        hideAllTooltips();
+                    });
+                }
+            });
+            
+            // Also attach to text labels next to the boxes
+            const textElements = keySvg.querySelectorAll('text');
+            
+            textElements.forEach(text => {
+                const transform = text.getAttribute('transform');
+                if (transform && transform.includes('translate')) {
+                    const match = transform.match(/translate\(([\d.]+)\s+([\d.]+)\)/);
+                    if (match) {
+                        const y = parseFloat(match[2]);
+                        
+                        for (let [yPos, tooltipId] of Object.entries(roleTooltipMapping)) {
+                            const boxY = parseFloat(yPos);
+                            if (Math.abs(y - (boxY + 8)) < 10) {
+                                text.style.cursor = 'pointer';
+                                
+                                text.addEventListener('mouseenter', function(e) {
+                                    e.stopPropagation();
+                                    showTooltip(tooltipId);
+                                });
+                                
+                                text.addEventListener('mouseleave', function(e) {
+                                    e.stopPropagation();
+                                    hideAllTooltips();
+                                });
+                                
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Version checking functionality
+        let lastModified = null;
+        let updateCheckInterval = null;
+        let updateDismissed = false;
+
+        async function checkForUpdates() {
+            if (updateDismissed) return;
+            
+            try {
+                const response = await fetch('CareTend_Workflow_Flowchart.svg', {
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                });
+                
+                const currentModified = response.headers.get('Last-Modified');
+                
+                if (lastModified === null) {
+                    lastModified = currentModified;
+                } else if (currentModified && currentModified !== lastModified) {
+                    showUpdateBanner();
+                }
+            } catch (error) {
+                // Silently fail
+            }
+        }
+
+        function showUpdateBanner() {
+            const banner = document.getElementById('updateBanner');
+            if (banner) {
+                banner.classList.add('show');
+                if (updateCheckInterval) {
+                    clearInterval(updateCheckInterval);
+                }
+            }
+        }
+
+        function dismissUpdateBanner() {
+            const banner = document.getElementById('updateBanner');
+            if (banner) {
+                banner.classList.remove('show');
+                updateDismissed = true;
+            }
+        }
+
+        function refreshPage() {
+            window.location.reload(true);
+        }
+
+        // Event handlers
+        async function init() {
+            document.getElementById('loading').classList.remove('hidden');
+            
+            await loadSVGs();
+            
+            const container = document.getElementById('viewerContainer');
+            const svgWrapper = document.getElementById('svgWrapper');
+            const keyViewer = document.getElementById('keyViewer');
+            
+            // Main flowchart wheel handler
+            function handleWheel(e) {
+                if (!isPanMode) {
+                    // In scroll mode: allow default scrolling
+                    return;
+                }
+                
+                e.preventDefault();
+                
+                const rect = container.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const oldZoom = currentZoom;
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                currentZoom = Math.max(0.1, Math.min(10, currentZoom * delta));
+                
+                const zoomRatio = currentZoom / oldZoom;
+                currentX = mouseX - (mouseX - currentX) * zoomRatio;
+                currentY = mouseY - (mouseY - currentY) * zoomRatio;
+                lastX = currentX;
+                lastY = currentY;
+                
+                updateTransform();
+                updateZoomDisplay();
+            }
+            
+            container.addEventListener('wheel', handleWheel, { passive: false });
+            
+            // Pan handlers
+            svgWrapper.addEventListener('mousedown', e => {
+                if (!isPanMode) return;
+                isDragging = true;
+                startX = e.clientX - currentX;
+                startY = e.clientY - currentY;
+                svgWrapper.style.cursor = 'grabbing';
+            });
+            
+            svgWrapper.addEventListener('mouseup', () => {
+                isDragging = false;
+                if (isPanMode) {
+                    svgWrapper.style.cursor = 'grab';
+                }
+            });
+            
+            svgWrapper.addEventListener('mouseleave', () => {
+                isDragging = false;
+                if (isPanMode) {
+                    svgWrapper.style.cursor = 'grab';
+                }
+            });
+            
+            svgWrapper.addEventListener('mousemove', e => {
+                if (!isDragging || !isPanMode) return;
+                
+                currentX = e.clientX - startX;
+                currentY = e.clientY - startY;
+                lastX = currentX;
+                lastY = currentY;
+                updateTransform();
+            });
+            
+            // Key pan handlers
+            keyViewer.addEventListener('mousedown', e => {
+                isKeyDragging = true;
+                keyStartX = e.clientX - keyTranslateX;
+                keyStartY = e.clientY - keyTranslateY;
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isKeyDragging = false;
+            });
+            
+            document.addEventListener('mousemove', e => {
+                if (!isKeyDragging) return;
+                keyTranslateX = e.clientX - keyStartX;
+                keyTranslateY = e.clientY - keyStartY;
+                updateKeyTransform();
+            });
+            
+            // Key wheel zoom
+            function handleKeyWheel(e) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                keyZoom = Math.max(keyMinZoom, Math.min(keyMaxZoom, keyZoom * delta));
+                updateKeyTransform();
+            }
+            
+            keyViewer.addEventListener('wheel', handleKeyWheel, { passive: false });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', e => {
+                if (e.target.tagName === 'INPUT') return;
+                
+                switch(e.key.toLowerCase()) {
+                    case 'k':
+                        toggleKey();
+                        break;
+                    case '+':
+                    case '=':
+                        zoomIn();
+                        break;
+                    case '-':
+                    case '_':
+                        zoomOut();
+                        break;
+                    case '0':
+                        resetView();
+                        break;
+                    case 'f':
+                        fitToScreen();
+                        break;
+                    case 'h':
+                    case '?':
+                        toggleInstructions();
+                        break;
+                }
+            });
+            
+            // Initialize in scroll mode at 300% zoom
+            const svg = document.querySelector('#svgWrapper > svg');
+            const wrapper = document.getElementById('svgWrapper');
+            
+            if (svg) {
+                // Use transform scale from top center
+                svg.style.transformOrigin = 'top center';
+                svg.style.transform = `scale(${currentZoom})`;
+                svg.style.position = 'relative';
+                svg.style.display = 'block';
+            }
+            
+            isPanMode = false;
+            
+            // Update zoom display
+            updateZoomDisplay();
+            
+            // Scroll to show flowchart content on initial load
+            setTimeout(() => {
+                const container = document.getElementById('svgWrapper');
+                if (container) {
+                    // Jump to ePrescription Manager (first bookmark) - anchors are now centered
+                    jumpToQueue('anchor_eprescription');
+                }
+            }, 150);
+            
+            updateTransform();
+            updateZoomDisplay();
+            
+            document.getElementById('loading').classList.add('hidden');
+            
+            // Start checking for updates
+            setTimeout(() => {
+                checkForUpdates();
+                updateCheckInterval = setInterval(checkForUpdates, 5 * 60 * 1000);
+            }, 30000);
+        }
+    </script>
+</body>
+</html>
